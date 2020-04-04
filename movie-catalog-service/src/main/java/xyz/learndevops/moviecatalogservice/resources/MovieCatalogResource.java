@@ -8,7 +8,9 @@ import org.springframework.web.client.RestTemplate;
 import xyz.learndevops.moviecatalogservice.models.CatalogItem;
 import xyz.learndevops.moviecatalogservice.models.Movie;
 import xyz.learndevops.moviecatalogservice.models.Rating;
+import xyz.learndevops.moviecatalogservice.models.UserRating;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -24,18 +26,15 @@ public class MovieCatalogResource {
     @RequestMapping("/{userId}")
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
 
-        List<Rating> ratings = Arrays.asList(
-                new Rating("1234", 4),
-                new Rating("5678", 5)
-        );
+        UserRating ratings = restTemplate.getForObject("http://localhost:8083/ratingsdata/user/" + userId, UserRating.class);
 
-        return ratings.stream().map(rating -> {
+        return ratings.getUserRating().stream().map(rating -> {
+            // For each movie ID, call movie info service and get details
             Movie movie = restTemplate.getForObject("http://localhost:8082/movies/" + rating.getMovieId(), Movie.class);
+            // Put them all together
             return new CatalogItem(movie.getName(), "Test", rating.getRating());
         }).collect(Collectors.toList());
-        // For each movie ID, call movie info service and get details
 
-        // Put them all together
 
     }
 }
